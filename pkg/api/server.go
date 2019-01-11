@@ -131,7 +131,7 @@ func setContentType(next http.Handler) http.Handler {
 // Start starts HTTP server which can shut down gracefully
 func (s *Server) Start(port int) {
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:8081"},
+		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Origin", "X-Requested-With", "Content-Type", "Accept", "Access-Control-Allow-Origin", "Authorization"},
 		AllowCredentials: true,
