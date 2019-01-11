@@ -15,7 +15,7 @@
   name = "github.com/andreymgn/RSOI-comment"
   packages = ["pkg/comment/proto"]
   pruneopts = "UT"
-  revision = "112a178efa8f4e07fdf72c47f3c201f52282b13b"
+  revision = "53a97274e37465f49d46b0692ba9410988e7ec2d"
 
 [[projects]]
   branch = "master"
@@ -23,7 +23,7 @@
   name = "github.com/andreymgn/RSOI-post"
   packages = ["pkg/post/proto"]
   pruneopts = "UT"
-  revision = "3ed70f194d9beded2dbe572d2f007a04716aa865"
+  revision = "cd885597bb824ff824411335ee7f8f8f8bec3abd"
 
 [[projects]]
   branch = "master"
@@ -31,7 +31,7 @@
   name = "github.com/andreymgn/RSOI-poststats"
   packages = ["pkg/poststats/proto"]
   pruneopts = "UT"
-  revision = "18b741fb3966b7d73c1d3a7a9d5b0cd62772609d"
+  revision = "0c237ebfe172d0e8332cec5f6cf95fa9f1560a53"
 
 [[projects]]
   branch = "master"
@@ -39,7 +39,7 @@
   name = "github.com/andreymgn/RSOI-user"
   packages = ["pkg/user/proto"]
   pruneopts = "UT"
-  revision = "9289a05b3bf2eee8eedd969170cd8b27957622f7"
+  revision = "0703529a9b4fd306a45c9590bd9cf714480cb460"
 
 [[projects]]
   branch = "master"
