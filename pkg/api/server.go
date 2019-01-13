@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/mux"
+
 	comment "github.com/andreymgn/RSOI-comment/pkg/comment/proto"
 	post "github.com/andreymgn/RSOI-post/pkg/post/proto"
 	poststats "github.com/andreymgn/RSOI-poststats/pkg/poststats/proto"
 	user "github.com/andreymgn/RSOI-user/pkg/user/proto"
-	"github.com/andreymgn/RSOI/pkg/tracer"
-	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/rs/cors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -62,7 +62,7 @@ type UserClient struct {
 }
 
 type Server struct {
-	router                 *tracer.TracedRouter
+	router                 *mux.Router
 	postClient             *PostClient
 	commentClient          *CommentClient
 	postStatsClient        *PostStatsClient
@@ -73,9 +73,9 @@ type Server struct {
 }
 
 // NewServer returns new instance of Server
-func NewServer(pc post.PostClient, cc comment.CommentClient, psc poststats.PostStatsClient, uc user.UserClient, tr opentracing.Tracer) *Server {
+func NewServer(pc post.PostClient, cc comment.CommentClient, psc poststats.PostStatsClient, uc user.UserClient) *Server {
 	return &Server{
-		tracer.NewRouter(tr),
+		mux.NewRouter(),
 		&PostClient{pc, "", PostAppID, PostAppSecret},
 		&CommentClient{cc, "", CommentAppID, CommentAppSecret},
 		&PostStatsClient{psc, "", PostStatsAppID, PostStatsAppSecret},
@@ -136,7 +136,7 @@ func (s *Server) Start(port int) {
 		AllowedHeaders:   []string{"Origin", "X-Requested-With", "Content-Type", "Accept", "Access-Control-Allow-Origin", "Authorization"},
 		AllowCredentials: true,
 	})
-	s.router.Mux.Use(setContentType)
+	s.router.Use(setContentType)
 	s.routes()
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", port),
