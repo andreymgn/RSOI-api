@@ -28,23 +28,11 @@ func (s *Server) deletePostWorker() {
 		}
 
 		_, err := s.postClient.client.DeletePost(ctx,
-			&post.DeletePostRequest{Token: s.postClient.token, Uid: req.uid},
+			&post.DeletePostRequest{Uid: req.uid},
 		)
 		if err != nil {
 			if st, ok := status.FromError(err); ok {
-				switch st.Code() {
-				case codes.Unauthenticated:
-					err := s.updatePostToken()
-					if err != nil {
-						panic(err)
-					}
-					_, err = s.postStatsClient.client.DeletePostStats(ctx,
-						&poststats.DeletePostStatsRequest{Token: s.postStatsClient.token, PostUid: req.uid},
-					)
-					if err != nil {
-						panic(err)
-					}
-				case codes.Unavailable:
+				if st.Code() == codes.Unavailable {
 					newReq := workerRequest{req.uid, time.Now().Add(time.Second * 5)}
 					s.deletePostChannel <- newReq
 					log.Printf("DeletePost rabotyaga: retrying %s", req.uid)
@@ -65,23 +53,11 @@ func (s *Server) deletePostStatsWorker() {
 		}
 
 		_, err := s.postStatsClient.client.DeletePostStats(ctx,
-			&poststats.DeletePostStatsRequest{Token: s.postStatsClient.token, PostUid: req.uid},
+			&poststats.DeletePostStatsRequest{PostUid: req.uid},
 		)
 		if err != nil {
 			if st, ok := status.FromError(err); ok {
-				switch st.Code() {
-				case codes.Unauthenticated:
-					err := s.updatePostStatsToken()
-					if err != nil {
-						panic(err)
-					}
-					_, err = s.postStatsClient.client.DeletePostStats(ctx,
-						&poststats.DeletePostStatsRequest{Token: s.postStatsClient.token, PostUid: req.uid},
-					)
-					if err != nil {
-						panic(err)
-					}
-				case codes.Unavailable:
+				if st.Code() == codes.Unavailable {
 					newReq := workerRequest{req.uid, time.Now().Add(time.Second * 5)}
 					s.deletePostStatsChannel <- newReq
 					log.Printf("DeletePostStats rabotyaga: retrying %s", req.uid)
@@ -102,23 +78,11 @@ func (s *Server) deleteCommentWorker() {
 		}
 
 		_, err := s.commentClient.client.DeleteComment(ctx,
-			&comment.DeleteCommentRequest{Uid: req.uid, Token: s.commentClient.token},
+			&comment.DeleteCommentRequest{Uid: req.uid},
 		)
 		if err != nil {
 			if st, ok := status.FromError(err); ok {
-				switch st.Code() {
-				case codes.Unauthenticated:
-					err := s.updatePostToken()
-					if err != nil {
-						panic(err)
-					}
-					_, err = s.commentClient.client.DeleteComment(ctx,
-						&comment.DeleteCommentRequest{Uid: req.uid, Token: s.commentClient.token},
-					)
-					if err != nil {
-						panic(err)
-					}
-				case codes.Unavailable:
+				if st.Code() == codes.Unavailable {
 					newReq := workerRequest{req.uid, time.Now().Add(time.Second * 5)}
 					s.deleteCommentChannel <- newReq
 					log.Printf("DeleteComment rabotyaga: retrying %s", req.uid)

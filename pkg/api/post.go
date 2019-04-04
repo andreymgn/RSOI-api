@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -133,7 +132,7 @@ func (s *Server) createPost() http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		userToken := getAuthrizationToken(r)
+		userToken := getAuthorizationToken(r)
 		if userToken == "" {
 			w.WriteHeader(http.StatusForbidden)
 			return
@@ -165,57 +164,28 @@ func (s *Server) createPost() http.HandlerFunc {
 
 		ctx := r.Context()
 		p, err := s.postClient.client.CreatePost(ctx,
-			&post.CreatePostRequest{Token: s.postClient.token, Title: req.Title, Url: req.URL, UserUid: userUID},
+			&post.CreatePostRequest{Title: req.Title, Url: req.URL, UserUid: userUID},
 		)
 		if err != nil {
-			if st, ok := status.FromError(err); ok && st.Code() == codes.Unauthenticated {
-				err := s.updatePostToken()
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-				p, err = s.postClient.client.CreatePost(ctx,
-					&post.CreatePostRequest{Token: s.postClient.token, Title: req.Title, Url: req.URL, UserUid: userUID},
-				)
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-			} else {
-				handleRPCError(w, err)
-				return
-			}
+			handleRPCError(w, err)
+			return
 		}
 
 		_, err = s.postStatsClient.client.CreatePostStats(ctx,
-			&poststats.CreatePostStatsRequest{Token: s.postStatsClient.token, PostUid: p.Uid},
+			&poststats.CreatePostStatsRequest{PostUid: p.Uid},
 		)
 		if err != nil {
 			if st, ok := status.FromError(err); ok {
-				switch st.Code() {
-				case codes.Unauthenticated:
-					err := s.updatePostStatsToken()
-					if err != nil {
-						handleRPCError(w, err)
-						return
-					}
-					_, err = s.postStatsClient.client.CreatePostStats(ctx,
-						&poststats.CreatePostStatsRequest{Token: s.postStatsClient.token, PostUid: p.Uid},
-					)
-					if err != nil {
-						handleRPCError(w, err)
-						return
-					}
-				case codes.Unavailable:
+				if st.Code() == codes.Unavailable {
 					_, err := s.postClient.client.DeletePost(ctx,
-						&post.DeletePostRequest{Token: s.postClient.token, Uid: p.Uid},
+						&post.DeletePostRequest{Uid: p.Uid},
 					)
 					if err != nil {
 						handleRPCError(w, err)
 						return
 					}
 					w.WriteHeader(http.StatusServiceUnavailable)
-				default:
+				} else {
 					handleRPCError(w, err)
 					return
 				}
@@ -312,26 +282,11 @@ func (s *Server) getPost() http.HandlerFunc {
 		}
 
 		_, err = s.postStatsClient.client.IncreaseViews(ctx,
-			&poststats.IncreaseViewsRequest{Token: s.postStatsClient.token, PostUid: uid},
+			&poststats.IncreaseViewsRequest{PostUid: uid},
 		)
 		if err != nil {
-			if st, ok := status.FromError(err); ok && st.Code() == codes.Unauthenticated {
-				err := s.updatePostStatsToken()
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-				_, err = s.postStatsClient.client.IncreaseViews(ctx,
-					&poststats.IncreaseViewsRequest{Token: s.postStatsClient.token, PostUid: uid},
-				)
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-			} else {
-				handleRPCError(w, err)
-				return
-			}
+			handleRPCError(w, err)
+			return
 		}
 
 		w.WriteHeader(http.StatusOK)
@@ -346,7 +301,7 @@ func (s *Server) updatePost() http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		userToken := getAuthrizationToken(r)
+		userToken := getAuthorizationToken(r)
 		if userToken == "" {
 			w.WriteHeader(http.StatusForbidden)
 			return
@@ -394,26 +349,11 @@ func (s *Server) updatePost() http.HandlerFunc {
 		}
 
 		_, err = s.postClient.client.UpdatePost(ctx,
-			&post.UpdatePostRequest{Token: s.postClient.token, Uid: uid, Title: req.Title, Url: req.URL},
+			&post.UpdatePostRequest{Uid: uid, Title: req.Title, Url: req.URL},
 		)
 		if err != nil {
-			if st, ok := status.FromError(err); ok && st.Code() == codes.Unauthenticated {
-				err := s.updatePostToken()
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-				_, err = s.postClient.client.UpdatePost(ctx,
-					&post.UpdatePostRequest{Token: s.postClient.token, Uid: uid, Title: req.Title, Url: req.URL},
-				)
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-			} else {
-				handleRPCError(w, err)
-				return
-			}
+			handleRPCError(w, err)
+			return
 		}
 
 		w.WriteHeader(http.StatusNoContent)
@@ -422,7 +362,7 @@ func (s *Server) updatePost() http.HandlerFunc {
 
 func (s *Server) deletePost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userToken := getAuthrizationToken(r)
+		userToken := getAuthorizationToken(r)
 		if userToken == "" {
 			w.WriteHeader(http.StatusForbidden)
 			return
@@ -478,7 +418,7 @@ func (s *Server) deletePost() http.HandlerFunc {
 
 func (s *Server) likePost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userToken := getAuthrizationToken(r)
+		userToken := getAuthorizationToken(r)
 		if userToken == "" {
 			w.WriteHeader(http.StatusForbidden)
 			return
@@ -500,26 +440,11 @@ func (s *Server) likePost() http.HandlerFunc {
 
 		ctx := r.Context()
 		_, err = s.postStatsClient.client.LikePost(ctx,
-			&poststats.LikePostRequest{Token: s.postStatsClient.token, PostUid: uid},
+			&poststats.LikePostRequest{PostUid: uid},
 		)
 		if err != nil {
-			if st, ok := status.FromError(err); ok && st.Code() == codes.Unauthenticated {
-				err := s.updatePostStatsToken()
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-				_, err = s.postStatsClient.client.LikePost(ctx,
-					&poststats.LikePostRequest{Token: s.postStatsClient.token, PostUid: uid},
-				)
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-			} else {
-				handleRPCError(w, err)
-				return
-			}
+			handleRPCError(w, err)
+			return
 		}
 
 		w.WriteHeader(http.StatusNoContent)
@@ -528,7 +453,7 @@ func (s *Server) likePost() http.HandlerFunc {
 
 func (s *Server) dislikePost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userToken := getAuthrizationToken(r)
+		userToken := getAuthorizationToken(r)
 		if userToken == "" {
 			w.WriteHeader(http.StatusForbidden)
 			return
@@ -550,52 +475,13 @@ func (s *Server) dislikePost() http.HandlerFunc {
 
 		ctx := r.Context()
 		_, err = s.postStatsClient.client.DislikePost(ctx,
-			&poststats.DislikePostRequest{Token: s.postStatsClient.token, PostUid: uid},
+			&poststats.DislikePostRequest{PostUid: uid},
 		)
 		if err != nil {
-			if st, ok := status.FromError(err); ok && st.Code() == codes.Unauthenticated {
-				err := s.updatePostStatsToken()
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-				_, err = s.postStatsClient.client.DislikePost(ctx,
-					&poststats.DislikePostRequest{Token: s.postStatsClient.token, PostUid: uid},
-				)
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-			} else {
-				handleRPCError(w, err)
-				return
-			}
+			handleRPCError(w, err)
+			return
 		}
 
 		w.WriteHeader(http.StatusNoContent)
 	}
-}
-
-func (s *Server) updatePostToken() error {
-	token, err := s.postClient.client.GetToken(context.Background(),
-		&post.GetTokenRequest{AppId: s.postClient.appID, AppSecret: s.postClient.appSecret},
-	)
-	if err != nil {
-		return err
-	}
-
-	s.postClient.token = token.Token
-	return nil
-}
-
-func (s *Server) updatePostStatsToken() error {
-	token, err := s.postStatsClient.client.GetToken(context.Background(),
-		&poststats.GetTokenRequest{AppId: s.postStatsClient.appID, AppSecret: s.postStatsClient.appSecret},
-	)
-	if err != nil {
-		return err
-	}
-
-	s.postStatsClient.token = token.Token
-	return nil
 }

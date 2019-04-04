@@ -86,7 +86,7 @@ func NewServer(pc post.PostClient, cc comment.CommentClient, psc poststats.PostS
 	}
 }
 
-func getAuthrizationToken(r *http.Request) string {
+func getAuthorizationToken(r *http.Request) string {
 	auth := r.Header.Get("Authorization")
 	splitToken := strings.Split(auth, "Bearer ")
 	if len(splitToken) == 2 {
@@ -97,6 +97,7 @@ func getAuthrizationToken(r *http.Request) string {
 }
 
 func handleRPCError(w http.ResponseWriter, err error) {
+	log.Println("API err:", err)
 	st, ok := status.FromError(err)
 	if !ok {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

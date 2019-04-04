@@ -4,12 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	user "github.com/andreymgn/RSOI-user/pkg/user/proto"
 	"github.com/gorilla/mux"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func (s *Server) getUserInfo() http.HandlerFunc {
@@ -73,23 +72,8 @@ func (s *Server) createUser() http.HandlerFunc {
 			&user.CreateUserRequest{Token: s.userClient.token, Username: req.Username, Password: req.Password},
 		)
 		if err != nil {
-			if st, ok := status.FromError(err); ok && st.Code() == codes.Unauthenticated {
-				err := s.updateUserToken()
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-				createUserResponse, err = s.userClient.client.CreateUser(ctx,
-					&user.CreateUserRequest{Token: s.userClient.token, Username: req.Username, Password: req.Password},
-				)
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-			} else {
-				handleRPCError(w, err)
-				return
-			}
+			handleRPCError(w, err)
+			return
 		}
 
 		resp := response{createUserResponse.Uid, createUserResponse.Username}
@@ -133,26 +117,12 @@ func (s *Server) getToken() http.HandlerFunc {
 
 		ctx := r.Context()
 		accessTokenResponse, err := s.userClient.client.GetAccessToken(ctx,
-			&user.GetTokenRequest{ApiToken: s.userClient.token, Username: req.Username, Password: req.Password},
+			&user.GetTokenRequest{Username: req.Username, Password: req.Password},
 		)
+		log.Println("getting access token for user ", req.Username)
 		if err != nil {
-			if st, ok := status.FromError(err); ok && st.Code() == codes.Unauthenticated {
-				err := s.updateUserToken()
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-				accessTokenResponse, err = s.userClient.client.GetAccessToken(ctx,
-					&user.GetTokenRequest{ApiToken: s.userClient.token, Username: req.Username, Password: req.Password},
-				)
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-			} else {
-				handleRPCError(w, err)
-				return
-			}
+			handleRPCError(w, err)
+			return
 		}
 
 		resp := response{}
@@ -161,26 +131,11 @@ func (s *Server) getToken() http.HandlerFunc {
 
 		if req.Refresh {
 			refreshTokenResponse, err := s.userClient.client.GetRefreshToken(ctx,
-				&user.GetTokenRequest{ApiToken: s.userClient.token, Username: req.Username, Password: req.Password},
+				&user.GetTokenRequest{Username: req.Username, Password: req.Password},
 			)
 			if err != nil {
-				if st, ok := status.FromError(err); ok && st.Code() == codes.Unauthenticated {
-					err := s.updateUserToken()
-					if err != nil {
-						handleRPCError(w, err)
-						return
-					}
-					refreshTokenResponse, err = s.userClient.client.GetRefreshToken(ctx,
-						&user.GetTokenRequest{ApiToken: s.userClient.token, Username: req.Username, Password: req.Password},
-					)
-					if err != nil {
-						handleRPCError(w, err)
-						return
-					}
-				} else {
-					handleRPCError(w, err)
-					return
-				}
+				handleRPCError(w, err)
+				return
 			}
 
 			resp.RefreshToken = refreshTokenResponse.Token
@@ -223,26 +178,11 @@ func (s *Server) refreshToken() http.HandlerFunc {
 
 		ctx := r.Context()
 		refreshTokenResponse, err := s.userClient.client.RefreshAccessToken(ctx,
-			&user.RefreshAccessTokenRequest{ApiToken: s.userClient.token, RefreshToken: req.Token},
+			&user.RefreshAccessTokenRequest{RefreshToken: req.Token},
 		)
 		if err != nil {
-			if st, ok := status.FromError(err); ok && st.Code() == codes.Unauthenticated {
-				err := s.updateUserToken()
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-				refreshTokenResponse, err = s.userClient.client.RefreshAccessToken(ctx,
-					&user.RefreshAccessTokenRequest{ApiToken: s.userClient.token, RefreshToken: req.Token},
-				)
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-			} else {
-				handleRPCError(w, err)
-				return
-			}
+			handleRPCError(w, err)
+			return
 		}
 
 		resp := response{refreshTokenResponse.AccessToken, refreshTokenResponse.RefreshToken}
@@ -260,23 +200,10 @@ func (s *Server) refreshToken() http.HandlerFunc {
 func (s *Server) getUIDByToken(token string) (string, error) {
 	ctx := context.Background()
 	uid, err := s.userClient.client.GetUserByAccessToken(ctx,
-		&user.GetUserByAccessTokenRequest{ApiToken: s.userClient.token, UserToken: token},
+		&user.GetUserByAccessTokenRequest{UserToken: token},
 	)
 	if err != nil {
-		if st, ok := status.FromError(err); ok && st.Code() == codes.Unauthenticated {
-			err := s.updateUserToken()
-			if err != nil {
-				return "", err
-			}
-			uid, err = s.userClient.client.GetUserByAccessToken(ctx,
-				&user.GetUserByAccessTokenRequest{ApiToken: s.userClient.token, UserToken: token},
-			)
-			if err != nil {
-				return "", err
-			}
-		} else {
-			return "", err
-		}
+		return "", err
 	}
 
 	return uid.Uid, nil
@@ -293,7 +220,7 @@ func (s *Server) createApp() http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		userToken := getAuthrizationToken(r)
+		userToken := getAuthorizationToken(r)
 		if userToken == "" {
 			w.WriteHeader(http.StatusForbidden)
 			return
@@ -325,26 +252,11 @@ func (s *Server) createApp() http.HandlerFunc {
 
 		ctx := r.Context()
 		createAppResponse, err := s.userClient.client.CreateApp(ctx,
-			&user.CreateAppRequest{ApiToken: s.userClient.token, Name: req.Name, Owner: userUID},
+			&user.CreateAppRequest{Name: req.Name, Owner: userUID},
 		)
 		if err != nil {
-			if st, ok := status.FromError(err); ok && st.Code() == codes.Unauthenticated {
-				err := s.updateUserToken()
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-				createAppResponse, err = s.userClient.client.CreateApp(ctx,
-					&user.CreateAppRequest{ApiToken: s.userClient.token, Name: req.Name, Owner: userUID},
-				)
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-			} else {
-				handleRPCError(w, err)
-				return
-			}
+			handleRPCError(w, err)
+			return
 		}
 
 		resp := response{createAppResponse.Id, createAppResponse.Secret}
@@ -417,26 +329,11 @@ func (s *Server) getOAuthCode() http.HandlerFunc {
 
 		ctx := r.Context()
 		oauthCodeResponse, err := s.userClient.client.GetOAuthCode(ctx,
-			&user.GetOAuthCodeRequest{ApiToken: s.userClient.token, Username: req.Username, Password: req.Password, AppUid: req.AppUID},
+			&user.GetOAuthCodeRequest{Username: req.Username, Password: req.Password, AppUid: req.AppUID},
 		)
 		if err != nil {
-			if st, ok := status.FromError(err); ok && st.Code() == codes.Unauthenticated {
-				err := s.updateUserToken()
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-				oauthCodeResponse, err = s.userClient.client.GetOAuthCode(ctx,
-					&user.GetOAuthCodeRequest{ApiToken: s.userClient.token, Username: req.Username, Password: req.Password, AppUid: req.AppUID},
-				)
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-			} else {
-				handleRPCError(w, err)
-				return
-			}
+			handleRPCError(w, err)
+			return
 		}
 
 		resp := response{oauthCodeResponse.Code}
@@ -468,26 +365,11 @@ func (s *Server) getTokenFromOAuthCode() http.HandlerFunc {
 		appSecret := queryParams.Get("client_secret")
 		ctx := r.Context()
 		getTokenResponse, err := s.userClient.client.GetTokenFromCode(ctx,
-			&user.GetTokenFromCodeRequest{ApiToken: s.userClient.token, Code: code, AppUid: appID, AppSecret: appSecret},
+			&user.GetTokenFromCodeRequest{Code: code, AppUid: appID, AppSecret: appSecret},
 		)
 		if err != nil {
-			if st, ok := status.FromError(err); ok && st.Code() == codes.Unauthenticated {
-				err := s.updateUserToken()
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-				getTokenResponse, err = s.userClient.client.GetTokenFromCode(ctx,
-					&user.GetTokenFromCodeRequest{ApiToken: s.userClient.token, Code: code, AppUid: appID, AppSecret: appSecret},
-				)
-				if err != nil {
-					handleRPCError(w, err)
-					return
-				}
-			} else {
-				handleRPCError(w, err)
-				return
-			}
+			handleRPCError(w, err)
+			return
 		}
 
 		resp := response{getTokenResponse.AccessToken, getTokenResponse.RefreshToken}
@@ -500,16 +382,4 @@ func (s *Server) getTokenFromOAuthCode() http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		w.Write(json)
 	}
-}
-
-func (s *Server) updateUserToken() error {
-	token, err := s.userClient.client.GetServiceToken(context.Background(),
-		&user.GetServiceTokenRequest{AppId: s.userClient.appID, AppSecret: s.userClient.appSecret},
-	)
-	if err != nil {
-		return err
-	}
-
-	s.userClient.token = token.Token
-	return nil
 }
