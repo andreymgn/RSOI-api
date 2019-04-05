@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	user "github.com/andreymgn/RSOI-user/pkg/user/proto"
@@ -119,7 +118,6 @@ func (s *Server) getToken() http.HandlerFunc {
 		accessTokenResponse, err := s.userClient.client.GetAccessToken(ctx,
 			&user.GetTokenRequest{Username: req.Username, Password: req.Password},
 		)
-		log.Println("getting access token for user ", req.Username)
 		if err != nil {
 			handleRPCError(w, err)
 			return

@@ -1,44 +1,63 @@
 package main
 
 import (
-	"log"
-
 	api "github.com/andreymgn/RSOI-api/pkg/api"
 	comment "github.com/andreymgn/RSOI-comment/pkg/comment/proto"
 	post "github.com/andreymgn/RSOI-post/pkg/post/proto"
 	poststats "github.com/andreymgn/RSOI-poststats/pkg/poststats/proto"
 	user "github.com/andreymgn/RSOI-user/pkg/user/proto"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 func runAPI(port int, postAddr, commentAddr, postStatsAddr, userAddr string) error {
-	postConn, err := grpc.Dial(postAddr, grpc.WithInsecure())
+	creds, err := credentials.NewClientTLSFromFile("/post-cert.pem", "")
 	if err != nil {
-		log.Fatal(err)
+		return err
+	}
+
+	postConn, err := grpc.Dial(postAddr, grpc.WithTransportCredentials(creds))
+	if err != nil {
+		return err
 	}
 
 	defer postConn.Close()
 	pc := post.NewPostClient(postConn)
 
-	commentConn, err := grpc.Dial(commentAddr, grpc.WithInsecure())
+	creds, err = credentials.NewClientTLSFromFile("/comment-cert.pem", "")
 	if err != nil {
-		log.Fatal(err)
+		return err
+	}
+
+	commentConn, err := grpc.Dial(commentAddr, grpc.WithTransportCredentials(creds))
+	if err != nil {
+		return err
 	}
 
 	defer commentConn.Close()
 	cc := comment.NewCommentClient(commentConn)
 
-	postStatsConn, err := grpc.Dial(postStatsAddr, grpc.WithInsecure())
+	creds, err = credentials.NewClientTLSFromFile("/poststats-cert.pem", "")
 	if err != nil {
-		log.Fatal(err)
+		return err
+	}
+
+	postStatsConn, err := grpc.Dial(postStatsAddr, grpc.WithTransportCredentials(creds))
+	if err != nil {
+		return err
 	}
 
 	defer postStatsConn.Close()
 	psc := poststats.NewPostStatsClient(postStatsConn)
 
-	userConn, err := grpc.Dial(userAddr, grpc.WithInsecure())
+	creds, err = credentials.NewClientTLSFromFile("/user-cert.pem", "")
 	if err != nil {
-		log.Fatal(err)
+		return err
+	}
+
+	userConn, err := grpc.Dial(userAddr, grpc.WithTransportCredentials(creds))
+	if err != nil {
+		return err
 	}
 
 	defer userConn.Close()
