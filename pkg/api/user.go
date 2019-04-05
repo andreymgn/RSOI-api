@@ -68,7 +68,7 @@ func (s *Server) createUser() http.HandlerFunc {
 
 		ctx := r.Context()
 		createUserResponse, err := s.userClient.client.CreateUser(ctx,
-			&user.CreateUserRequest{Token: s.userClient.token, Username: req.Username, Password: req.Password},
+			&user.CreateUserRequest{Username: req.Username, Password: req.Password},
 		)
 		if err != nil {
 			handleRPCError(w, err)

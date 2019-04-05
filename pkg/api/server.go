@@ -10,59 +10,40 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/mux"
+	opentracing "github.com/opentracing/opentracing-go"
 
 	comment "github.com/andreymgn/RSOI-comment/pkg/comment/proto"
 	post "github.com/andreymgn/RSOI-post/pkg/post/proto"
 	poststats "github.com/andreymgn/RSOI-poststats/pkg/poststats/proto"
 	user "github.com/andreymgn/RSOI-user/pkg/user/proto"
+	"github.com/andreymgn/RSOI/pkg/tracer"
 	"github.com/rs/cors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 const (
-	PostAppID          = "PostAPI"
-	PostAppSecret      = "0JDt37eVLP0VcEJB"
-	CommentAppID       = "CommentAPI"
-	CommentAppSecret   = "PT6RUHLokksaBdIj"
-	PostStatsAppID     = "PostStatsAPI"
-	PostStatsAppSecret = "3BusyNfGQpyCr77J"
-	UserAppID          = "UserAPI"
-	UserAppSecret      = "fzFKf3g6QeIdqbP7"
-	MaxQueueLength     = 100
+	MaxQueueLength = 100
 )
 
 type PostClient struct {
-	client    post.PostClient
-	token     string
-	appID     string
-	appSecret string
+	client post.PostClient
 }
 
 type CommentClient struct {
-	client    comment.CommentClient
-	token     string
-	appID     string
-	appSecret string
+	client comment.CommentClient
 }
 
 type PostStatsClient struct {
-	client    poststats.PostStatsClient
-	token     string
-	appID     string
-	appSecret string
+	client poststats.PostStatsClient
 }
 
 type UserClient struct {
-	client    user.UserClient
-	token     string
-	appID     string
-	appSecret string
+	client user.UserClient
 }
 
 type Server struct {
-	router                 *mux.Router
+	router                 *tracer.TracedRouter
 	postClient             *PostClient
 	commentClient          *CommentClient
 	postStatsClient        *PostStatsClient
@@ -73,13 +54,13 @@ type Server struct {
 }
 
 // NewServer returns new instance of Server
-func NewServer(pc post.PostClient, cc comment.CommentClient, psc poststats.PostStatsClient, uc user.UserClient) *Server {
+func NewServer(pc post.PostClient, cc comment.CommentClient, psc poststats.PostStatsClient, uc user.UserClient, tr opentracing.Tracer) *Server {
 	return &Server{
-		mux.NewRouter(),
-		&PostClient{pc, "", PostAppID, PostAppSecret},
-		&CommentClient{cc, "", CommentAppID, CommentAppSecret},
-		&PostStatsClient{psc, "", PostStatsAppID, PostStatsAppSecret},
-		&UserClient{uc, "", UserAppID, UserAppSecret},
+		tracer.NewRouter(tr),
+		&PostClient{pc},
+		&CommentClient{cc},
+		&PostStatsClient{psc},
+		&UserClient{uc},
 		make(chan workerRequest, MaxQueueLength),
 		make(chan workerRequest, MaxQueueLength),
 		make(chan workerRequest, MaxQueueLength),
@@ -137,7 +118,7 @@ func (s *Server) Start(port int) {
 		AllowedHeaders:   []string{"Origin", "X-Requested-With", "Content-Type", "Accept", "Access-Control-Allow-Origin", "Authorization"},
 		AllowCredentials: true,
 	})
-	s.router.Use(setContentType)
+	s.router.Mux.Use(setContentType)
 	s.routes()
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", port),
