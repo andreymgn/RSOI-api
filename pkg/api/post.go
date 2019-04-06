@@ -36,6 +36,9 @@ func (s *Server) getPosts() http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		uid := vars["uid"]
+
 		page, size := r.URL.Query().Get("page"), r.URL.Query().Get("size")
 		var pageNum, sizeNum int32 = 0, 10
 		if page != "" {
@@ -58,7 +61,7 @@ func (s *Server) getPosts() http.HandlerFunc {
 
 		ctx := r.Context()
 		postResponse, err := s.postClient.client.ListPosts(ctx,
-			&post.ListPostsRequest{PageSize: sizeNum, PageNumber: pageNum},
+			&post.ListPostsRequest{PageSize: sizeNum, PageNumber: pageNum, CategoryUid: uid},
 		)
 		if err != nil {
 			handleRPCError(w, err)
@@ -132,6 +135,9 @@ func (s *Server) createPost() http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		uid := vars["uid"]
+
 		userToken := getAuthorizationToken(r)
 		if userToken == "" {
 			w.WriteHeader(http.StatusForbidden)
@@ -164,7 +170,7 @@ func (s *Server) createPost() http.HandlerFunc {
 
 		ctx := r.Context()
 		p, err := s.postClient.client.CreatePost(ctx,
-			&post.CreatePostRequest{Title: req.Title, Url: req.URL, UserUid: userUID},
+			&post.CreatePostRequest{Title: req.Title, Url: req.URL, UserUid: userUID, CategoryUid: uid},
 		)
 		if err != nil {
 			handleRPCError(w, err)
@@ -224,6 +230,7 @@ func (s *Server) getPost() http.HandlerFunc {
 	type response struct {
 		UID         string
 		UserUID     string
+		CategoryUID string
 		Title       string
 		URL         string
 		CreatedAt   time.Time
@@ -249,6 +256,7 @@ func (s *Server) getPost() http.HandlerFunc {
 		var res response
 		res.UID = postResponse.Uid
 		res.UserUID = postResponse.UserUid
+		res.CategoryUID = postResponse.CategoryUid
 		res.Title = postResponse.Title
 		res.URL = postResponse.Url
 		res.CreatedAt, err = ptypes.Timestamp(postResponse.CreatedAt)
@@ -335,8 +343,8 @@ func (s *Server) updatePost() http.HandlerFunc {
 		uid := vars["uid"]
 
 		ctx := r.Context()
-		owner, err := s.postClient.client.GetOwner(ctx,
-			&post.GetOwnerRequest{Uid: uid},
+		owner, err := s.postClient.client.GetPostOwner(ctx,
+			&post.GetPostOwnerRequest{Uid: uid},
 		)
 		if err != nil {
 			handleRPCError(w, err)
@@ -383,8 +391,8 @@ func (s *Server) deletePost() http.HandlerFunc {
 		uid := vars["uid"]
 
 		ctx := r.Context()
-		owner, err := s.postClient.client.GetOwner(ctx,
-			&post.GetOwnerRequest{Uid: uid},
+		owner, err := s.postClient.client.GetPostOwner(ctx,
+			&post.GetPostOwnerRequest{Uid: uid},
 		)
 		if err != nil {
 			handleRPCError(w, err)

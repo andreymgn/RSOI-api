@@ -3,9 +3,13 @@ package api
 import "net/http"
 
 func (s *Server) routes() {
+	categoryRouter := s.router.Mux.PathPrefix("/api/categories").Subrouter()
+	categoryRouter.HandleFunc("/", s.getCategories()).Methods("GET")
+	categoryRouter.HandleFunc("/", s.createCategory()).Methods("POST")
+	categoryRouter.HandleFunc("/{uid}", s.getPosts()).Methods("GET")
+	categoryRouter.HandleFunc("/{uid}", s.createPost()).Methods("POST")
+
 	postsRouter := s.router.Mux.PathPrefix("/api/posts").Subrouter()
-	postsRouter.HandleFunc("/", s.getPosts()).Methods("GET")
-	postsRouter.HandleFunc("/", s.createPost()).Methods("POST")
 	postsRouter.HandleFunc("/{uid}", s.getPost()).Methods("GET")
 	postsRouter.HandleFunc("/{uid}", s.updatePost()).Methods("PATCH")
 	postsRouter.HandleFunc("/{uid}", s.deletePost()).Methods("DELETE")
