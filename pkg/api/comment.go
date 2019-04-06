@@ -9,6 +9,7 @@ import (
 
 	comment "github.com/andreymgn/RSOI-comment/pkg/comment/proto"
 	post "github.com/andreymgn/RSOI-post/pkg/post/proto"
+	user "github.com/andreymgn/RSOI-user/pkg/user/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/gorilla/mux"
 )
@@ -336,8 +337,19 @@ func (s *Server) deleteComment() http.HandlerFunc {
 		}
 
 		if userUID != owner.OwnerUid {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
+			// Check if current user is admin
+			userInfo, err := s.userClient.client.GetUserInfo(ctx,
+				&user.GetUserInfoRequest{Uid: userUID},
+			)
+			if err != nil {
+				handleRPCError(w, err)
+				return
+			}
+
+			if !userInfo.IsAdmin {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
 		}
 
 		_, err = s.commentClient.client.RemoveContent(ctx,

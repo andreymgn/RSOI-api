@@ -10,6 +10,7 @@ import (
 	comment "github.com/andreymgn/RSOI-comment/pkg/comment/proto"
 	post "github.com/andreymgn/RSOI-post/pkg/post/proto"
 	poststats "github.com/andreymgn/RSOI-poststats/pkg/poststats/proto"
+	user "github.com/andreymgn/RSOI-user/pkg/user/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/gorilla/mux"
 	"google.golang.org/grpc/codes"
@@ -400,8 +401,19 @@ func (s *Server) deletePost() http.HandlerFunc {
 		}
 
 		if userUID != owner.OwnerUid {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
+			// Check if current user is admin
+			userInfo, err := s.userClient.client.GetUserInfo(ctx,
+				&user.GetUserInfoRequest{Uid: userUID},
+			)
+			if err != nil {
+				handleRPCError(w, err)
+				return
+			}
+
+			if !userInfo.IsAdmin {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
 		}
 
 		s.deletePostChannel <- workerRequest{uid, time.Now()}
