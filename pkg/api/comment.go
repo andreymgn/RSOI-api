@@ -337,7 +337,7 @@ func (s *Server) deleteComment() http.HandlerFunc {
 		}
 
 		if userUID != owner.OwnerUid {
-			// Check if current user is admin
+			// Check if current user is global admin
 			userInfo, err := s.userClient.client.GetUserInfo(ctx,
 				&user.GetUserInfoRequest{Uid: userUID},
 			)
@@ -347,8 +347,19 @@ func (s *Server) deleteComment() http.HandlerFunc {
 			}
 
 			if !userInfo.IsAdmin {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
+				// Check if current user is category admin
+				categoryAdminInfo, err := s.postClient.client.GetCategoryAdminByPost(ctx,
+					&post.GetCategoryAdminByPostRequest{PostUid: postUID},
+				)
+				if err != nil {
+					handleRPCError(w, err)
+					return
+				}
+
+				if userUID != categoryAdminInfo.OwnerUid {
+					w.WriteHeader(http.StatusUnauthorized)
+					return
+				}
 			}
 		}
 
