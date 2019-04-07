@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	post "github.com/andreymgn/RSOI-post/pkg/post/proto"
+	category "github.com/andreymgn/RSOI-category/pkg/category/proto"
 )
 
 func (s *Server) getCategories() http.HandlerFunc {
@@ -44,8 +44,8 @@ func (s *Server) getCategories() http.HandlerFunc {
 		}
 
 		ctx := r.Context()
-		categoryResponse, err := s.postClient.client.ListCategories(ctx,
-			&post.ListCategoriesRequest{PageSize: sizeNum, PageNumber: pageNum},
+		categoryResponse, err := s.categoryClient.client.ListCategories(ctx,
+			&category.ListCategoriesRequest{PageSize: sizeNum, PageNumber: pageNum},
 		)
 		if err != nil {
 			handleRPCError(w, err)
@@ -114,8 +114,8 @@ func (s *Server) createCategory() http.HandlerFunc {
 		}
 
 		ctx := r.Context()
-		c, err := s.postClient.client.CreateCategory(ctx,
-			&post.CreateCategoryRequest{Name: req.Name, UserUid: userUID},
+		c, err := s.categoryClient.client.CreateCategory(ctx,
+			&category.CreateCategoryRequest{Name: req.Name, UserUid: userUID},
 		)
 		if err != nil {
 			handleRPCError(w, err)

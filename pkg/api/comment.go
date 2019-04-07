@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	category "github.com/andreymgn/RSOI-category/pkg/category/proto"
 	comment "github.com/andreymgn/RSOI-comment/pkg/comment/proto"
 	post "github.com/andreymgn/RSOI-post/pkg/post/proto"
 	user "github.com/andreymgn/RSOI-user/pkg/user/proto"
@@ -313,6 +314,7 @@ func (s *Server) deleteComment() http.HandlerFunc {
 		vars := mux.Vars(r)
 		uid := vars["uid"]
 		postUID := vars["postuid"]
+		categoryUID := vars["categoryuid"]
 
 		ctx := r.Context()
 		checkExistsResponse, err := s.postClient.client.CheckPostExists(ctx,
@@ -348,15 +350,15 @@ func (s *Server) deleteComment() http.HandlerFunc {
 
 			if !userInfo.IsAdmin {
 				// Check if current user is category admin
-				categoryAdminInfo, err := s.postClient.client.GetCategoryAdminByPost(ctx,
-					&post.GetCategoryAdminByPostRequest{PostUid: postUID},
+				categoryInfo, err := s.categoryClient.client.GetCategoryInfo(ctx,
+					&category.GetCategoryInfoRequest{Uid: categoryUID},
 				)
 				if err != nil {
 					handleRPCError(w, err)
 					return
 				}
 
-				if userUID != categoryAdminInfo.OwnerUid {
+				if userUID != categoryInfo.UserUid {
 					w.WriteHeader(http.StatusUnauthorized)
 					return
 				}

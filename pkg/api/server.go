@@ -12,6 +12,7 @@ import (
 
 	opentracing "github.com/opentracing/opentracing-go"
 
+	category "github.com/andreymgn/RSOI-category/pkg/category/proto"
 	comment "github.com/andreymgn/RSOI-comment/pkg/comment/proto"
 	post "github.com/andreymgn/RSOI-post/pkg/post/proto"
 	poststats "github.com/andreymgn/RSOI-poststats/pkg/poststats/proto"
@@ -30,6 +31,10 @@ type PostClient struct {
 	client post.PostClient
 }
 
+type CategoryClient struct {
+	client category.CategoryClient
+}
+
 type CommentClient struct {
 	client comment.CommentClient
 }
@@ -45,6 +50,7 @@ type UserClient struct {
 type Server struct {
 	router                 *tracer.TracedRouter
 	postClient             *PostClient
+	categoryClient         *CategoryClient
 	commentClient          *CommentClient
 	postStatsClient        *PostStatsClient
 	userClient             *UserClient
@@ -54,10 +60,11 @@ type Server struct {
 }
 
 // NewServer returns new instance of Server
-func NewServer(pc post.PostClient, cc comment.CommentClient, psc poststats.PostStatsClient, uc user.UserClient, tr opentracing.Tracer) *Server {
+func NewServer(pc post.PostClient, catc category.CategoryClient, cc comment.CommentClient, psc poststats.PostStatsClient, uc user.UserClient, tr opentracing.Tracer) *Server {
 	return &Server{
 		tracer.NewRouter(tr),
 		&PostClient{pc},
+		&CategoryClient{catc},
 		&CommentClient{cc},
 		&PostStatsClient{psc},
 		&UserClient{uc},

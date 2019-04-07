@@ -4,6 +4,7 @@ import (
 	"log"
 
 	api "github.com/andreymgn/RSOI-api/pkg/api"
+	category "github.com/andreymgn/RSOI-category/pkg/category/proto"
 	comment "github.com/andreymgn/RSOI-comment/pkg/comment/proto"
 	post "github.com/andreymgn/RSOI-post/pkg/post/proto"
 	poststats "github.com/andreymgn/RSOI-poststats/pkg/poststats/proto"
@@ -14,16 +15,16 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-func runAPI(port int, postAddr, commentAddr, postStatsAddr, userAddr, jaegerAddr string) error {
-	creds, err := credentials.NewClientTLSFromFile("/post-cert.pem", "")
-	if err != nil {
-		return err
-	}
-
+func runAPI(port int, postAddr, categoryAddr, commentAddr, postStatsAddr, userAddr, jaegerAddr string) error {
 	tracer, closer, err := tracer.NewTracer("api", jaegerAddr)
 	defer closer.Close()
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	creds, err := credentials.NewClientTLSFromFile("/post-cert.pem", "")
+	if err != nil {
+		return err
 	}
 
 	postConn, err := grpc.Dial(postAddr,
@@ -36,6 +37,22 @@ func runAPI(port int, postAddr, commentAddr, postStatsAddr, userAddr, jaegerAddr
 
 	defer postConn.Close()
 	pc := post.NewPostClient(postConn)
+
+	creds, err = credentials.NewClientTLSFromFile("/category-cert.pem", "")
+	if err != nil {
+		return err
+	}
+
+	categoryConn, err := grpc.Dial(categoryAddr,
+		grpc.WithTransportCredentials(creds),
+		grpc.WithUnaryInterceptor(otgrpc.OpenTracingClientInterceptor(tracer)),
+	)
+	if err != nil {
+		return err
+	}
+
+	defer categoryConn.Close()
+	catc := category.NewCategoryClient(categoryConn)
 
 	creds, err = credentials.NewClientTLSFromFile("/comment-cert.pem", "")
 	if err != nil {
@@ -85,7 +102,7 @@ func runAPI(port int, postAddr, commentAddr, postStatsAddr, userAddr, jaegerAddr
 	defer userConn.Close()
 	uc := user.NewUserClient(userConn)
 
-	server := api.NewServer(pc, cc, psc, uc, tracer)
+	server := api.NewServer(pc, catc, cc, psc, uc, tracer)
 	server.Start(port)
 
 	return nil
