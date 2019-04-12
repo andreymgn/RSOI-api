@@ -13,6 +13,7 @@ import (
 	poststats "github.com/andreymgn/RSOI-poststats/pkg/poststats/proto"
 	user "github.com/andreymgn/RSOI-user/pkg/user/proto"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -22,6 +23,7 @@ func (s *Server) getPosts() http.HandlerFunc {
 	type p struct {
 		UID         string
 		UserUID     string
+		CategoryUID string
 		Title       string
 		URL         string
 		CreatedAt   time.Time
@@ -74,6 +76,7 @@ func (s *Server) getPosts() http.HandlerFunc {
 		for i, singlePostResponse := range postResponse.Posts {
 			posts[i].UID = singlePostResponse.Uid
 			posts[i].UserUID = singlePostResponse.UserUid
+			posts[i].CategoryUID = singlePostResponse.CategoryUid
 			posts[i].Title = singlePostResponse.Title
 			posts[i].URL = singlePostResponse.Url
 			posts[i].CreatedAt, err = ptypes.Timestamp(singlePostResponse.CreatedAt)
@@ -516,5 +519,81 @@ func (s *Server) dislikePost() http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func (s *Server) reportPost() http.HandlerFunc {
+	type request struct {
+		Reason string
+	}
+
+	type response struct {
+		UID         string
+		CategoryUID string
+		PostUID     string
+		CommentUID  string
+		Reason      string
+		CreatedAt   time.Time
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		userToken := getAuthorizationToken(r)
+		if userToken == "" {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		userUID, err := s.getUIDByToken(userToken)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		if userUID == "" {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		var req request
+		b, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		err = json.Unmarshal(b, &req)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+			return
+		}
+
+		vars := mux.Vars(r)
+		categoryUID := vars["categoryuid"]
+		postUID := vars["uid"]
+
+		ctx := r.Context()
+		report, err := s.categoryClient.client.CreateReport(ctx,
+			&category.CreateReportRequest{CategoryUid: categoryUID, PostUid: postUID, Reason: req.Reason, CommentUid: uuid.Nil.String()},
+		)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		createdAt, err := ptypes.Timestamp(report.CreatedAt)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		response := response{report.Uid, report.CategoryUid, report.PostUid, report.CommentUid, report.Reason, createdAt}
+		json, err := json.Marshal(response)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		w.Write(json)
 	}
 }

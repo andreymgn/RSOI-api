@@ -117,6 +117,78 @@ func (s *Server) getPostComments() http.HandlerFunc {
 	}
 }
 
+func (s *Server) getSingleComment() http.HandlerFunc {
+	type response struct {
+		UID        string
+		UserUID    string
+		PostUID    string
+		Body       string
+		ParentUID  string
+		CreatedAt  time.Time
+		ModifiedAt time.Time
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		uid := vars["uid"]
+		postUID := vars["postuid"]
+
+		ctx := r.Context()
+		checkExistsResponse, err := s.postClient.client.CheckPostExists(ctx,
+			&post.CheckPostExistsRequest{Uid: postUID},
+		)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		if !checkExistsResponse.Exists {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		singleComment, err := s.commentClient.client.GetComment(ctx,
+			&comment.GetCommentRequest{Uid: uid},
+		)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		var res response
+		res.UID = singleComment.Uid
+		res.PostUID = singleComment.PostUid
+		res.Body = "[deleted]"
+		res.ParentUID = singleComment.ParentUid
+		res.CreatedAt, err = ptypes.Timestamp(singleComment.CreatedAt)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		res.ModifiedAt, err = ptypes.Timestamp(singleComment.ModifiedAt)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		if !singleComment.IsDeleted {
+			res.UserUID = singleComment.UserUid
+			res.Body = singleComment.Body
+
+		}
+
+		json, err := json.Marshal(res)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write(json)
+	}
+}
+
 func (s *Server) createComment() http.HandlerFunc {
 	type request struct {
 		Body      string `json:"body"`
@@ -374,5 +446,82 @@ func (s *Server) deleteComment() http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func (s *Server) reportComment() http.HandlerFunc {
+	type request struct {
+		Reason string
+	}
+
+	type response struct {
+		UID         string
+		CategoryUID string
+		PostUID     string
+		CommentUID  string
+		Reason      string
+		CreatedAt   time.Time
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		userToken := getAuthorizationToken(r)
+		if userToken == "" {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		userUID, err := s.getUIDByToken(userToken)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		if userUID == "" {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		var req request
+		b, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		err = json.Unmarshal(b, &req)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+			return
+		}
+
+		vars := mux.Vars(r)
+		categoryUID := vars["categoryuid"]
+		postUID := vars["postuid"]
+		commentUID := vars["uid"]
+
+		ctx := r.Context()
+		report, err := s.categoryClient.client.CreateReport(ctx,
+			&category.CreateReportRequest{CategoryUid: categoryUID, PostUid: postUID, CommentUid: commentUID, Reason: req.Reason},
+		)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		createdAt, err := ptypes.Timestamp(report.CreatedAt)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		response := response{report.Uid, report.CategoryUid, report.PostUid, report.CommentUid, report.Reason, createdAt}
+		json, err := json.Marshal(response)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		w.Write(json)
 	}
 }
