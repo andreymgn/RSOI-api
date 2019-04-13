@@ -5,8 +5,10 @@ import "net/http"
 func (s *Server) routes() {
 	categoryRouter := s.router.Mux.PathPrefix("/api/categories").Subrouter()
 	categoryRouter.HandleFunc("/", s.getCategories()).Methods("GET")
+	categoryRouter.HandleFunc("/{uid}", s.getCategoryInfo()).Methods("GET")
 	categoryRouter.HandleFunc("/", s.createCategory()).Methods("POST")
-	categoryRouter.HandleFunc("/{uid}/posts", s.getPosts()).Methods("GET")
+	s.router.Mux.HandleFunc("/api/posts", s.getPosts()).Methods("GET")
+	categoryRouter.HandleFunc("/{uid}/posts", s.getPostsByCategory()).Methods("GET")
 	categoryRouter.HandleFunc("/{uid}/posts", s.createPost()).Methods("POST")
 	categoryRouter.HandleFunc("/{uid}/reports", s.getReports()).Methods("GET")
 	categoryRouter.HandleFunc("/{categoryuid}/reports/{uid}", s.deleteReport()).Methods("DELETE")

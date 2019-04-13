@@ -40,6 +40,105 @@ func (s *Server) getPosts() http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		page, size := r.URL.Query().Get("page"), r.URL.Query().Get("size")
+		var pageNum, sizeNum int32 = 0, 10
+		if page != "" {
+			n, err := strconv.Atoi(page)
+			if err != nil {
+				http.Error(w, "can't parse query parameter `page`", http.StatusBadRequest)
+				return
+			}
+			pageNum = int32(n)
+		}
+
+		if size != "" {
+			n, err := strconv.Atoi(size)
+			if err != nil {
+				http.Error(w, "can't parse query parameter `size`", http.StatusBadRequest)
+				return
+			}
+			sizeNum = int32(n)
+		}
+
+		ctx := r.Context()
+		postResponse, err := s.postClient.client.ListPosts(ctx,
+			&post.ListPostsRequest{PageSize: sizeNum, PageNumber: pageNum},
+		)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		posts := make([]p, len(postResponse.Posts))
+		for i, singlePostResponse := range postResponse.Posts {
+			posts[i].UID = singlePostResponse.Uid
+			posts[i].UserUID = singlePostResponse.UserUid
+			posts[i].CategoryUID = singlePostResponse.CategoryUid
+			posts[i].Title = singlePostResponse.Title
+			posts[i].URL = singlePostResponse.Url
+			posts[i].CreatedAt, err = ptypes.Timestamp(singlePostResponse.CreatedAt)
+			if err != nil {
+				handleRPCError(w, err)
+				return
+			}
+
+			posts[i].ModifiedAt, err = ptypes.Timestamp(singlePostResponse.ModifiedAt)
+			if err != nil {
+				handleRPCError(w, err)
+				return
+			}
+
+			postStats, err := s.postStatsClient.client.GetPostStats(ctx,
+				&poststats.GetPostStatsRequest{PostUid: posts[i].UID},
+			)
+			if st, ok := status.FromError(err); ok && st.Code() == codes.Unavailable {
+				posts[i].NumLikes = -1
+				posts[i].NumDislikes = -1
+				posts[i].NumViews = -1
+
+			} else if err != nil {
+				handleRPCError(w, err)
+				return
+			} else {
+				posts[i].NumLikes = postStats.NumLikes
+				posts[i].NumDislikes = postStats.NumDislikes
+				posts[i].NumViews = postStats.NumViews
+			}
+		}
+
+		resp := response{posts, sizeNum, pageNum}
+		json, err := json.Marshal(resp)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write(json)
+	}
+}
+
+func (s *Server) getPostsByCategory() http.HandlerFunc {
+	type p struct {
+		UID         string
+		UserUID     string
+		CategoryUID string
+		Title       string
+		URL         string
+		CreatedAt   time.Time
+		ModifiedAt  time.Time
+		NumLikes    int32
+		NumDislikes int32
+		NumViews    int32
+	}
+
+	type response struct {
+		Posts      []p
+		PageSize   int32
+		PageNumber int32
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		uid := vars["uid"]
 
@@ -64,8 +163,8 @@ func (s *Server) getPosts() http.HandlerFunc {
 		}
 
 		ctx := r.Context()
-		postResponse, err := s.postClient.client.ListPosts(ctx,
-			&post.ListPostsRequest{PageSize: sizeNum, PageNumber: pageNum, CategoryUid: uid},
+		postResponse, err := s.postClient.client.ListPostsByCategory(ctx,
+			&post.ListPostsByCategoryRequest{PageSize: sizeNum, PageNumber: pageNum, CategoryUid: uid},
 		)
 		if err != nil {
 			handleRPCError(w, err)

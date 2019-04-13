@@ -14,9 +14,10 @@ import (
 
 func (s *Server) getCategories() http.HandlerFunc {
 	type c struct {
-		UID     string
-		UserUID string
-		Name    string
+		UID         string
+		UserUID     string
+		Name        string
+		Description string
 	}
 
 	type response struct {
@@ -60,6 +61,7 @@ func (s *Server) getCategories() http.HandlerFunc {
 			categories[i].UID = singleCategory.Uid
 			categories[i].UserUID = singleCategory.UserUid
 			categories[i].Name = singleCategory.Name
+			categories[i].Description = singleCategory.Description
 		}
 
 		resp := response{categories, sizeNum, pageNum}
@@ -74,15 +76,49 @@ func (s *Server) getCategories() http.HandlerFunc {
 	}
 }
 
+func (s *Server) getCategoryInfo() http.HandlerFunc {
+	type response struct {
+		UID         string
+		UserUID     string
+		Name        string
+		Description string
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		uid := vars["uid"]
+
+		ctx := r.Context()
+		c, err := s.categoryClient.client.GetCategoryInfo(ctx,
+			&category.GetCategoryInfoRequest{Uid: uid},
+		)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		resp := response{uid, c.UserUid, c.Name, c.Description}
+		json, err := json.Marshal(resp)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write(json)
+	}
+}
 func (s *Server) createCategory() http.HandlerFunc {
 	type request struct {
-		Name string `json:"name"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
 	}
 
 	type response struct {
-		UID     string
-		UserUID string
-		Name    string
+		UID         string
+		UserUID     string
+		Name        string
+		Description string
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -118,14 +154,14 @@ func (s *Server) createCategory() http.HandlerFunc {
 
 		ctx := r.Context()
 		c, err := s.categoryClient.client.CreateCategory(ctx,
-			&category.CreateCategoryRequest{Name: req.Name, UserUid: userUID},
+			&category.CreateCategoryRequest{Name: req.Name, Description: req.Description, UserUid: userUID},
 		)
 		if err != nil {
 			handleRPCError(w, err)
 			return
 		}
 
-		response := response{c.Uid, c.UserUid, c.Name}
+		response := response{c.Uid, c.UserUid, c.Name, c.Description}
 		json, err := json.Marshal(response)
 		if err != nil {
 			handleRPCError(w, err)
