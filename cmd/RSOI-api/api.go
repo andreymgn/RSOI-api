@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	api "github.com/andreymgn/RSOI-api/pkg/api"
 	category "github.com/andreymgn/RSOI-category/pkg/category/proto"
 	comment "github.com/andreymgn/RSOI-comment/pkg/comment/proto"
@@ -17,10 +15,11 @@ import (
 
 func runAPI(port int, postAddr, categoryAddr, commentAddr, postStatsAddr, userAddr, jaegerAddr string) error {
 	tracer, closer, err := tracer.NewTracer("api", jaegerAddr)
-	defer closer.Close()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+
+	defer closer.Close()
 
 	creds, err := credentials.NewClientTLSFromFile("/post-cert.pem", "")
 	if err != nil {
