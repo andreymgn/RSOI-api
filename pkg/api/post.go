@@ -552,6 +552,11 @@ func (s *Server) deletePost() http.HandlerFunc {
 }
 
 func (s *Server) likePost() http.HandlerFunc {
+	type response struct {
+		Success   bool
+		FirstTime bool
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		userToken := getAuthorizationToken(r)
 		if userToken == "" {
@@ -574,19 +579,33 @@ func (s *Server) likePost() http.HandlerFunc {
 		uid := vars["uid"]
 
 		ctx := r.Context()
-		_, err = s.postStatsClient.client.LikePost(ctx,
-			&poststats.LikePostRequest{PostUid: uid},
+		changed, err := s.postStatsClient.client.LikePost(ctx,
+			&poststats.LikePostRequest{PostUid: uid, UserUid: userUID},
 		)
 		if err != nil {
 			handleRPCError(w, err)
 			return
 		}
 
-		w.WriteHeader(http.StatusNoContent)
+		res := response{changed.Success, changed.FirstTime}
+
+		json, err := json.Marshal(res)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write(json)
 	}
 }
 
 func (s *Server) dislikePost() http.HandlerFunc {
+	type response struct {
+		Success   bool
+		FirstTime bool
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		userToken := getAuthorizationToken(r)
 		if userToken == "" {
@@ -609,15 +628,24 @@ func (s *Server) dislikePost() http.HandlerFunc {
 		uid := vars["uid"]
 
 		ctx := r.Context()
-		_, err = s.postStatsClient.client.DislikePost(ctx,
-			&poststats.DislikePostRequest{PostUid: uid},
+		changed, err := s.postStatsClient.client.DislikePost(ctx,
+			&poststats.DislikePostRequest{PostUid: uid, UserUid: userUID},
 		)
 		if err != nil {
 			handleRPCError(w, err)
 			return
 		}
 
-		w.WriteHeader(http.StatusNoContent)
+		res := response{changed.Success, changed.FirstTime}
+
+		json, err := json.Marshal(res)
+		if err != nil {
+			handleRPCError(w, err)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write(json)
 	}
 }
 
