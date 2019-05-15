@@ -3,278 +3,133 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:aec58b244d9c7b4e861c0497e8898af63c1605f3983a75c1a8534ab4c930906e"
   name = "github.com/andreymgn/RSOI"
   packages = ["pkg/tracer"]
-  pruneopts = "UT"
   revision = "29b692cbfb54670f7b2907cd2d37e8da85433c42"
 
 [[projects]]
   branch = "master"
-  digest = "1:f4855d97e1287c61e799bf44c22c263f2507e18dc1f1cc72cc9bcc0430775811"
   name = "github.com/andreymgn/RSOI-category"
   packages = ["pkg/category/proto"]
-  pruneopts = "UT"
-  revision = "21a0afacd891ca828777c11770aa2cd49f260b3a"
+  revision = "282effbce206f5f57633c396b118b7d1ed4cb5ff"
 
 [[projects]]
   branch = "master"
-  digest = "1:f47e72150c539b7190c98ae45457e296d7f5eaf2a70d03229938a59ea27e52de"
   name = "github.com/andreymgn/RSOI-comment"
   packages = ["pkg/comment/proto"]
-  pruneopts = "UT"
-  revision = "d84c299b9c659cc9c048c6425daa6c4682767ad4"
+  revision = "e9ecb61d0fea0d69e975aadf7c43bf83bb05d6d0"
 
 [[projects]]
   branch = "master"
-  digest = "1:77b411f9fdb8ee79cd53b5b389582f89324c45eedd97d8e89fd4fa7bb109b9fb"
   name = "github.com/andreymgn/RSOI-post"
   packages = ["pkg/post/proto"]
-  pruneopts = "UT"
-  revision = "fca086986b3a112ae1f68bc3b7306f3e8d529f65"
+  revision = "cca9936df580d132a3293d548b5a49c515e2f608"
 
 [[projects]]
   branch = "master"
-  digest = "1:9424f76c910a3be465647d5995305c7d42c5fc226c0f19489c1cd38bf67f6051"
   name = "github.com/andreymgn/RSOI-poststats"
   packages = ["pkg/poststats/proto"]
-  pruneopts = "UT"
-  revision = "9436841f432a3a497cbc57fab24b089bd0f70993"
+  revision = "62b4a5401f72e36e7d36f165869387e04c126f88"
 
 [[projects]]
   branch = "master"
-  digest = "1:79d1df6b2a346c78db3e10ab89f7477826d384a84fadafcf8e79e4af07804904"
   name = "github.com/andreymgn/RSOI-user"
   packages = ["pkg/user/proto"]
-  pruneopts = "UT"
-  revision = "a61b8f1aa5ca738472332ae0d952d5a1414f4163"
+  revision = "3b15c3a8aeff0dbf5f57184f158e7c1d0e8f0536"
 
 [[projects]]
-  digest = "1:239c4c7fd2159585454003d9be7207167970194216193a8a210b8d29576f19c9"
   name = "github.com/golang/protobuf"
-  packages = [
-    "proto",
-    "ptypes",
-    "ptypes/any",
-    "ptypes/duration",
-    "ptypes/timestamp",
-  ]
-  pruneopts = "UT"
+  packages = ["proto","ptypes","ptypes/any","ptypes/duration","ptypes/timestamp"]
   revision = "b5d812f8a3706043e23a9cd5babf2e5423744d30"
   version = "v1.3.1"
 
 [[projects]]
-  digest = "1:582b704bebaa06b48c29b0cec224a6058a09c86883aaddabde889cd1a5f73e1b"
   name = "github.com/google/uuid"
   packages = ["."]
-  pruneopts = "UT"
   revision = "0cd6bf5da1e1c83f8b45653022c74f71af0538a4"
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:d5f97fc268267ec1b61c3453058c738246fc3e746f14b1ae25161513b7367b0c"
   name = "github.com/gorilla/mux"
   packages = ["."]
-  pruneopts = "UT"
   revision = "c5c6c98bc25355028a63748a498942a6398ccd22"
   version = "v1.7.1"
 
 [[projects]]
   branch = "master"
-  digest = "1:1a1206efd03a54d336dce7bb8719e74f2f8932f661cb9f57d5813a1d99c083d8"
   name = "github.com/grpc-ecosystem/grpc-opentracing"
   packages = ["go/otgrpc"]
-  pruneopts = "UT"
   revision = "8e809c8a86450a29b90dcc9efbf062d0fe6d9746"
 
 [[projects]]
   branch = "master"
-  digest = "1:bccaead3121ab7964fd80fab704f612e5893fb5a2c581d520ec847ed8cfac27e"
   name = "github.com/opentracing-contrib/go-stdlib"
   packages = ["nethttp"]
-  pruneopts = "UT"
-  revision = "3020fec0e66bdb65fd42cb346cb65d58deb92e0d"
+  revision = "2b2d2700a3b75f6783973d5d5bbea33c7214c66f"
 
 [[projects]]
-  digest = "1:11e62d6050198055e6cd87ed57e5d8c669e84f839c16e16f192374d913d1a70d"
   name = "github.com/opentracing/opentracing-go"
-  packages = [
-    ".",
-    "ext",
-    "log",
-  ]
-  pruneopts = "UT"
+  packages = [".","ext","log"]
   revision = "659c90643e714681897ec2521c60567dd21da733"
   version = "v1.1.0"
 
 [[projects]]
-  digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
   name = "github.com/pkg/errors"
   packages = ["."]
-  pruneopts = "UT"
   revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
   version = "v0.8.1"
 
 [[projects]]
-  digest = "1:b0c25f00bad20d783d259af2af8666969e2fc343fa0dc9efe52936bbd67fb758"
   name = "github.com/rs/cors"
   packages = ["."]
-  pruneopts = "UT"
   revision = "9a47f48565a795472d43519dd49aac781f3034fb"
   version = "v1.6.0"
 
 [[projects]]
-  digest = "1:3b0ac1ac6f703e6d43f4e29c97da2c9e34465c66e2e19f9828e9841d1c9279a4"
   name = "github.com/uber/jaeger-client-go"
-  packages = [
-    ".",
-    "config",
-    "internal/baggage",
-    "internal/baggage/remote",
-    "internal/spanlog",
-    "internal/throttler",
-    "internal/throttler/remote",
-    "log",
-    "rpcmetrics",
-    "thrift",
-    "thrift-gen/agent",
-    "thrift-gen/baggage",
-    "thrift-gen/jaeger",
-    "thrift-gen/sampling",
-    "thrift-gen/zipkincore",
-    "transport",
-    "utils",
-  ]
-  pruneopts = "UT"
+  packages = [".","config","internal/baggage","internal/baggage/remote","internal/spanlog","internal/throttler","internal/throttler/remote","log","rpcmetrics","thrift","thrift-gen/agent","thrift-gen/baggage","thrift-gen/jaeger","thrift-gen/sampling","thrift-gen/zipkincore","transport","utils"]
   revision = "2f47546e3facd43297739439600bcf43f44cce5d"
   version = "v2.16.0"
 
 [[projects]]
-  digest = "1:c9d69a04f7fa171f50360bbcc32196b4de8ab8837ef772f6302d0140a1e3e7f6"
   name = "github.com/uber/jaeger-lib"
   packages = ["metrics"]
-  pruneopts = "UT"
   revision = "0e30338a695636fe5bcf7301e8030ce8dd2a8530"
   version = "v2.0.0"
 
 [[projects]]
   branch = "master"
-  digest = "1:07c70ed7db30e61c8e28f5139a426deef24d6be14a16a679f2c38e89b1704475"
   name = "golang.org/x/net"
-  packages = [
-    "context",
-    "http/httpguts",
-    "http2",
-    "http2/hpack",
-    "idna",
-    "internal/timeseries",
-    "trace",
-  ]
-  pruneopts = "UT"
-  revision = "4829fb13d2c62012c17688fa7f629f371014946d"
+  packages = ["context","http/httpguts","http2","http2/hpack","idna","internal/timeseries","trace"]
+  revision = "3ec19112720433827bbce8be9342797f5a6aaaf9"
 
 [[projects]]
   branch = "master"
-  digest = "1:157e5158a7f29d6633eed502880463aa43de3c36d451c7051591efd12f455ac8"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  pruneopts = "UT"
-  revision = "16072639606ea9e22c7d86e4cbd6af6314f4193c"
+  revision = "3a4b5fb9f71f5874b2374ae059bc0e0bcb52e145"
 
 [[projects]]
-  digest = "1:f4ea3f623a07a2602bb9c1624d6dc7d291261278ba2484508fac559dc7926048"
   name = "golang.org/x/text"
-  packages = [
-    "collate",
-    "collate/build",
-    "internal/colltab",
-    "internal/gen",
-    "internal/language",
-    "internal/language/compact",
-    "internal/tag",
-    "internal/triegen",
-    "internal/ucd",
-    "language",
-    "secure/bidirule",
-    "transform",
-    "unicode/bidi",
-    "unicode/cldr",
-    "unicode/norm",
-    "unicode/rangetable",
-  ]
-  pruneopts = "UT"
-  revision = "c942b20a5d85b458c4dce1589326051d85e25d6d"
-  version = "v0.3.1"
+  packages = ["collate","collate/build","internal/colltab","internal/gen","internal/language","internal/language/compact","internal/tag","internal/triegen","internal/ucd","language","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable"]
+  revision = "342b2e1fbaa52c93f31447ad2c6abc048c63e475"
+  version = "v0.3.2"
 
 [[projects]]
   branch = "master"
-  digest = "1:c3076e7defee87de1236f1814beb588f40a75544c60121e6eb38b3b3721783e2"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  pruneopts = "UT"
-  revision = "e7d98fc518a78c9f8b5ee77be7b0b317475d89e1"
+  revision = "d00d292a067ce1aa0017b40ca75437b42461fa61"
 
 [[projects]]
-  digest = "1:707c3a5d10ed430ea767d73df122d9eb3dfb6312bbacc9f2e39204390686d1d0"
   name = "google.golang.org/grpc"
-  packages = [
-    ".",
-    "balancer",
-    "balancer/base",
-    "balancer/roundrobin",
-    "binarylog/grpc_binarylog_v1",
-    "codes",
-    "connectivity",
-    "credentials",
-    "credentials/internal",
-    "encoding",
-    "encoding/proto",
-    "grpclog",
-    "internal",
-    "internal/backoff",
-    "internal/balancerload",
-    "internal/binarylog",
-    "internal/channelz",
-    "internal/envconfig",
-    "internal/grpcrand",
-    "internal/grpcsync",
-    "internal/syscall",
-    "internal/transport",
-    "keepalive",
-    "metadata",
-    "naming",
-    "peer",
-    "resolver",
-    "resolver/dns",
-    "resolver/passthrough",
-    "stats",
-    "status",
-    "tap",
-  ]
-  pruneopts = "UT"
+  packages = [".","balancer","balancer/base","balancer/roundrobin","binarylog/grpc_binarylog_v1","codes","connectivity","credentials","credentials/internal","encoding","encoding/proto","grpclog","internal","internal/backoff","internal/balancerload","internal/binarylog","internal/channelz","internal/envconfig","internal/grpcrand","internal/grpcsync","internal/syscall","internal/transport","keepalive","metadata","naming","peer","resolver","resolver/dns","resolver/passthrough","stats","status","tap"]
   revision = "25c4f928eaa6d96443009bd842389fb4fa48664e"
   version = "v1.20.1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  input-imports = [
-    "github.com/andreymgn/RSOI-category/pkg/category/proto",
-    "github.com/andreymgn/RSOI-comment/pkg/comment/proto",
-    "github.com/andreymgn/RSOI-post/pkg/post/proto",
-    "github.com/andreymgn/RSOI-poststats/pkg/poststats/proto",
-    "github.com/andreymgn/RSOI-user/pkg/user/proto",
-    "github.com/andreymgn/RSOI/pkg/tracer",
-    "github.com/golang/protobuf/ptypes",
-    "github.com/google/uuid",
-    "github.com/gorilla/mux",
-    "github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc",
-    "github.com/opentracing/opentracing-go",
-    "github.com/rs/cors",
-    "google.golang.org/grpc",
-    "google.golang.org/grpc/codes",
-    "google.golang.org/grpc/credentials",
-    "google.golang.org/grpc/status",
-  ]
+  inputs-digest = "b8907004f1e9d027c08ff7c6dc65388152e9e689121a64769fc5d684a4fb9889"
   solver-name = "gps-cdcl"
   solver-version = 1

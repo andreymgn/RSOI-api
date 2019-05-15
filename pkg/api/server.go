@@ -95,19 +95,16 @@ func handleRPCError(w http.ResponseWriter, err error) {
 	switch st.Code() {
 	case codes.NotFound:
 		http.Error(w, st.Message(), http.StatusNotFound)
-		return
 	case codes.InvalidArgument:
 		http.Error(w, st.Message(), http.StatusUnprocessableEntity)
-		return
 	case codes.Unauthenticated:
 		w.WriteHeader(http.StatusForbidden)
-		return
 	case codes.Unavailable:
 		w.WriteHeader(http.StatusServiceUnavailable)
+	case codes.AlreadyExists:
+		http.Error(w, st.Message(), http.StatusConflict)
 	default:
-		log.Println(st.Message())
 		w.WriteHeader(http.StatusInternalServerError)
-		return
 	}
 }
 
